@@ -1,5 +1,15 @@
 import type { MarkerDef, MarkerStatus, Range, SystemId } from '../types'
 
+export type Sex = 'male' | 'female'
+
+/** Resolve a marker's ranges, honoring female-specific overrides when set. */
+export function rangesFor(def: MarkerDef, sex?: Sex): { std: Range; opt: Range } {
+  if (sex === 'female') {
+    return { std: def.femStd ?? def.std, opt: def.femOpt ?? def.opt }
+  }
+  return { std: def.std, opt: def.opt }
+}
+
 function within(r: Range, v: number): boolean {
   if (r.low !== undefined && v < r.low) return false
   if (r.high !== undefined && v > r.high) return false
@@ -14,16 +24,16 @@ function distOutside(r: Range, v: number): number {
 }
 
 /** A scale for "how far out is far": the range width, or the boundary value. */
-function rangeScale(def: MarkerDef): number {
-  const { std } = def
+function rangeScale(std: Range): number {
   if (std.low !== undefined && std.high !== undefined) return std.high - std.low
   const edge = std.high ?? std.low ?? 1
   return Math.max(Math.abs(edge) * 0.5, 1e-9)
 }
 
-export function markerStatus(def: MarkerDef, value: number): MarkerStatus {
-  if (within(def.opt, value)) return 'optimal'
-  if (within(def.std, value)) return 'ok'
+export function markerStatus(def: MarkerDef, value: number, sex?: Sex): MarkerStatus {
+  const { std, opt } = rangesFor(def, sex)
+  if (within(opt, value)) return 'optimal'
+  if (within(std, value)) return 'ok'
   return 'out'
 }
 
@@ -33,23 +43,24 @@ export function markerStatus(def: MarkerDef, value: number): MarkerStatus {
  *  - inside the standard range → 60–99, falling with distance from optimal
  *  - outside the standard range → below 60, falling toward 0
  */
-export function scoreMarker(def: MarkerDef, value: number): number {
-  if (within(def.opt, value)) return 100
+export function scoreMarker(def: MarkerDef, value: number, sex?: Sex): number {
+  const { std, opt } = rangesFor(def, sex)
+  if (within(opt, value)) return 100
 
-  const scale = rangeScale(def)
-  if (within(def.std, value)) {
-    const dOpt = distOutside(def.opt, value)
+  const scale = rangeScale(std)
+  if (within(std, value)) {
+    const dOpt = distOutside(opt, value)
     // Distance from the optimal edge to the standard edge on this side.
     const side =
-      def.opt.low !== undefined && value < def.opt.low
-        ? (def.opt.low ?? 0) - (def.std.low ?? def.opt.low - scale)
-        : (def.std.high ?? (def.opt.high ?? 0) + scale) - (def.opt.high ?? 0)
+      opt.low !== undefined && value < opt.low
+        ? (opt.low ?? 0) - (std.low ?? opt.low - scale)
+        : (std.high ?? (opt.high ?? 0) + scale) - (opt.high ?? 0)
     const span = Math.max(side, 1e-9)
     const f = Math.min(dOpt / span, 1)
     return Math.round(99 - f * 39) // 99 → 60
   }
 
-  const dStd = distOutside(def.std, value)
+  const dStd = distOutside(std, value)
   const f = Math.min(dStd / scale, 1)
   return Math.round(Math.max(0, 59 - f * 59))
 }
@@ -67,13 +78,14 @@ export interface SystemScore {
  */
 export function systemScores(
   defs: MarkerDef[],
-  latest: Map<string, number>
+  latest: Map<string, number>,
+  sex?: Sex
 ): Map<SystemId, SystemScore> {
   const bySystem = new Map<SystemId, SystemScore>()
   for (const def of defs) {
     const v = latest.get(def.id)
     if (v === undefined) continue
-    const s = scoreMarker(def, v)
+    const s = scoreMarker(def, v, sex)
     const cur = bySystem.get(def.category)
     if (!cur) {
       bySystem.set(def.category, {

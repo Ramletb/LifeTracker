@@ -37,7 +37,7 @@ export function Today({
   const latestValues = new Map(
     [...latest.entries()].map(([id, r]) => [id, r.value])
   )
-  const scores = systemScores(MARKERS, latestValues)
+  const scores = systemScores(MARKERS, latestValues, profile.sex)
 
   const byDate = new Map(daily.map((d) => [d.date, d]))
   const stepsSeries = lastNDays(7).map((date) => ({

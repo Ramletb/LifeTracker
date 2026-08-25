@@ -39,7 +39,13 @@ export const db = new LifeDB()
 
 export async function getProfile(): Promise<Profile> {
   const row = await db.kv.get('profile')
-  return { ...DEFAULT_PROFILE, ...((row?.value as Partial<Profile>) ?? {}) }
+  const stored = (row?.value as Partial<Profile>) ?? {}
+  // Stored undefined values must not shadow required defaults (a cleared
+  // numeric field in Settings would otherwise brick every view).
+  const cleaned = Object.fromEntries(
+    Object.entries(stored).filter(([, v]) => v !== undefined)
+  )
+  return { ...DEFAULT_PROFILE, ...cleaned }
 }
 
 export async function saveProfile(p: Profile): Promise<void> {
@@ -65,6 +71,59 @@ export async function wipeAllData(): Promise<void> {
     db.food.clear(),
     db.workouts.clear(),
     db.daily.clear(),
-    db.body.clear()
+    db.body.clear(),
+    db.kv.clear()
   ])
+}
+
+export interface ImportCounts {
+  added: number
+  skipped: number
+}
+
+/** Bulk-add lab results, skipping rows already present for a marker+date. */
+export async function importLabResults(
+  results: LabResult[]
+): Promise<ImportCounts> {
+  const existing = new Set(
+    (await db.labs.toArray()).map((r) => `${r.markerId}|${r.date}`)
+  )
+  const fresh = results.filter((r) => {
+    const key = `${r.markerId}|${r.date}`
+    if (existing.has(key)) return false
+    existing.add(key)
+    return true
+  })
+  await db.labs.bulkAdd(fresh)
+  return { added: fresh.length, skipped: results.length - fresh.length }
+}
+
+/** Bulk-add food entries, skipping exact duplicates (re-imported exports). */
+export async function importFoodEntries(
+  entries: FoodEntry[]
+): Promise<ImportCounts> {
+  const key = (e: FoodEntry) => `${e.date}|${e.meal}|${e.name}|${e.calories}`
+  const existing = new Set((await db.food.toArray()).map(key))
+  const fresh = entries.filter((e) => {
+    const k = key(e)
+    if (existing.has(k)) return false
+    existing.add(k)
+    return true
+  })
+  await db.food.bulkAdd(fresh)
+  return { added: fresh.length, skipped: entries.length - fresh.length }
+}
+
+/** Bulk-add workouts, skipping exact duplicates (re-imported exports). */
+export async function importWorkouts(entries: Workout[]): Promise<ImportCounts> {
+  const key = (w: Workout) => `${w.date}|${w.type}|${w.minutes}`
+  const existing = new Set((await db.workouts.toArray()).map(key))
+  const fresh = entries.filter((w) => {
+    const k = key(w)
+    if (existing.has(k)) return false
+    existing.add(k)
+    return true
+  })
+  await db.workouts.bulkAdd(fresh)
+  return { added: fresh.length, skipped: entries.length - fresh.length }
 }

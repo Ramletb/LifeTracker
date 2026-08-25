@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseCSV, parseDailyCSV, parseFoodCSV, parseLabsCSV, parseWorkoutsCSV } from './csv'
+import { parseDate } from './dates'
 
 describe('parseCSV', () => {
   it('handles quoted fields, escaped quotes and CRLF', () => {
@@ -52,6 +53,36 @@ describe('parseDailyCSV', () => {
   it('imports partial columns', () => {
     const res = parseDailyCSV('date,steps,sleep_hours\n2026-08-20,9200,7.4')
     expect(res.entries[0]).toMatchObject({ date: '2026-08-20', steps: 9200, sleepHours: 7.4 })
+  })
+  it('leaves blank cells out entirely so they cannot delete stored values', () => {
+    const res = parseDailyCSV(
+      'date,steps,systolic,diastolic\n2026-08-20,9000,,\n2026-08-21,,,'
+    )
+    expect(res.entries).toHaveLength(1)
+    expect(res.entries[0]).toEqual({ date: '2026-08-20', steps: 9000 })
+    expect('systolic' in res.entries[0]).toBe(false)
+  })
+})
+
+describe('parseDate', () => {
+  it('accepts common formats', () => {
+    expect(parseDate('2026-08-24')).toBe('2026-08-24')
+    expect(parseDate('8/24/2026')).toBe('2026-08-24')
+    expect(parseDate('Aug 24, 2026')).toBe('2026-08-24')
+  })
+  it('swaps unambiguous day-first dates instead of misparsing', () => {
+    expect(parseDate('24/08/2026')).toBe('2026-08-24')
+  })
+  it('rejects impossible month/day values', () => {
+    expect(parseDate('2026-13-45')).toBeUndefined()
+    expect(parseDate('0/40/2026')).toBeUndefined()
+  })
+})
+
+describe('num rejection of time-formatted values', () => {
+  it('skips workout rows whose duration is h:mm:ss instead of minutes', () => {
+    const res = parseWorkoutsCSV('date,type,minutes\n2026-08-20,Run,0:31:47')
+    expect(res.entries).toHaveLength(0)
   })
 })
 

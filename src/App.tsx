@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from './db'
+import { getProfile } from './db'
 import { DEFAULT_PROFILE, type Profile, type SystemId } from './types'
 import { TabBar, type TabId } from './components/ui'
 import { Today } from './views/Today'
@@ -15,11 +15,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [focusSystem, setFocusSystem] = useState<SystemId | null>(null)
 
-  const profile: Profile =
-    useLiveQuery(async () => {
-      const row = await db.kv.get('profile')
-      return { ...DEFAULT_PROFILE, ...((row?.value as Partial<Profile>) ?? {}) }
-    }, []) ?? DEFAULT_PROFILE
+  const profile: Profile = useLiveQuery(getProfile, []) ?? DEFAULT_PROFILE
 
   useEffect(() => {
     const root = document.documentElement
@@ -65,7 +61,11 @@ export default function App() {
           />
         )}
         {tab === 'labs' && (
-          <Labs focusSystem={focusSystem} onFocusHandled={() => setFocusSystem(null)} />
+          <Labs
+            profile={profile}
+            focusSystem={focusSystem}
+            onFocusHandled={() => setFocusSystem(null)}
+          />
         )}
         {tab === 'log' && <Log profile={profile} />}
         {tab === 'body' && <Body profile={profile} />}

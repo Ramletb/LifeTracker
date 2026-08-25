@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, upsertDaily } from '../db'
+import {
+  db,
+  importFoodEntries,
+  importWorkouts,
+  upsertDaily,
+  type ImportCounts
+} from '../db'
 import { addDays, fmtMed, todayISO } from '../lib/dates'
 import {
   parseDailyCSV,
@@ -55,6 +61,20 @@ export function Log({ profile }: { profile: Profile }) {
 }
 
 const MEALS: Meal[] = ['breakfast', 'lunch', 'dinner', 'snack']
+
+/** One honest status line for an import: successes, skips and errors together. */
+function importMessage(
+  what: string,
+  counts: ImportCounts,
+  errors: string[]
+): string {
+  const parts: string[] = []
+  if (counts.added > 0) parts.push(`Imported ${counts.added} ${what}.`)
+  if (counts.skipped > 0) parts.push(`Skipped ${counts.skipped} duplicates.`)
+  if (errors.length > 0) parts.push(errors.join(' '))
+  if (parts.length === 0) parts.push(`No ${what} found in that file.`)
+  return parts.join(' ')
+}
 
 function FoodLog({ date, profile }: { date: string; profile: Profile }) {
   const entries =
@@ -136,12 +156,11 @@ function FoodLog({ date, profile }: { date: string; profile: Profile }) {
             accept=".csv,text/csv"
             onText={async (t) => {
               const res = parseFoodCSV(t)
-              if (res.entries.length > 0) await db.food.bulkAdd(res.entries)
-              setMsg(
-                res.errors.length > 0
-                  ? res.errors.join(' ')
-                  : `Imported ${res.entries.length} food entries.`
-              )
+              const counts =
+                res.entries.length > 0
+                  ? await importFoodEntries(res.entries)
+                  : { added: 0, skipped: 0 }
+              setMsg(importMessage('food entries', counts, res.errors))
             }}
           />
         </div>
@@ -350,12 +369,11 @@ function WorkoutLog({ date }: { date: string }) {
             accept=".csv,text/csv"
             onText={async (t) => {
               const res = parseWorkoutsCSV(t)
-              if (res.entries.length > 0) await db.workouts.bulkAdd(res.entries)
-              setMsg(
-                res.errors.length > 0
-                  ? res.errors.join(' ')
-                  : `Imported ${res.entries.length} workouts.`
-              )
+              const counts =
+                res.entries.length > 0
+                  ? await importWorkouts(res.entries)
+                  : { added: 0, skipped: 0 }
+              setMsg(importMessage('workouts', counts, res.errors))
             }}
           />
         </div>
@@ -425,9 +443,11 @@ function DailyLog({ date }: { date: string }) {
                 await upsertDaily(d, patch)
               }
               setMsg(
-                res.errors.length > 0
-                  ? res.errors.join(' ')
-                  : `Imported ${res.entries.length} days.`
+                importMessage(
+                  'days',
+                  { added: res.entries.length, skipped: 0 },
+                  res.errors
+                )
               )
             }}
           />

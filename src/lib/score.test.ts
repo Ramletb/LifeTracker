@@ -57,6 +57,18 @@ describe('systemScores', () => {
   })
 })
 
+describe('female range overrides', () => {
+  const hgb = markerById.get('hemoglobin')!
+  it('uses female ranges when sex is female', () => {
+    expect(markerStatus(hgb, 13.0, 'female')).toBe('optimal')
+    expect(markerStatus(hgb, 13.0)).toBe('out')
+    expect(markerStatus(hgb, 13.0, 'male')).toBe('out')
+  })
+  it('falls back to default ranges for markers without overrides', () => {
+    expect(markerStatus(glucose, 85, 'female')).toBe('optimal')
+  })
+})
+
 describe('matchMarker aliases', () => {
   it('matches common lab-report spellings', () => {
     expect(matchMarker('Apolipoprotein B')).toBe('apob')

@@ -129,8 +129,12 @@ export function Settings({
           className="btn"
           type="button"
           onClick={async () => {
-            await loadSampleData()
-            setMsg('Sample data loaded — explore the tabs.')
+            try {
+              setMsg(await loadSampleData())
+              setErr(null)
+            } catch (e) {
+              setErr(e instanceof Error ? e.message : 'Loading sample data failed.')
+            }
           }}
         >
           Load sample data

@@ -55,6 +55,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'cardio',
     std: { low: 40 },
     opt: { low: 50, high: 100 },
+    femStd: { low: 50 },
+    femOpt: { low: 60, high: 110 },
     decimals: 0,
     desc: 'Cholesterol in HDL particles. Low values track with metabolic dysfunction; moderate-to-high values are favorable.',
     advice:
@@ -180,6 +182,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'metabolic',
     std: { low: 3.5, high: 7.2 },
     opt: { low: 3.5, high: 6.0 },
+    femStd: { low: 2.4, high: 6.0 },
+    femOpt: { low: 2.4, high: 5.5 },
     decimals: 1,
     desc: 'A purine-metabolism byproduct linked to gout, hypertension and metabolic syndrome at higher levels.',
     advice:
@@ -298,6 +302,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'kidney',
     std: { low: 0.7, high: 1.3 },
     opt: { low: 0.7, high: 1.2 },
+    femStd: { low: 0.6, high: 1.1 },
+    femOpt: { low: 0.6, high: 1.0 },
     decimals: 2,
     desc: 'A muscle byproduct filtered by the kidneys. Higher muscle mass (and creatine supplements) raise it without kidney harm.',
     aliases: ['serum creatinine']
@@ -412,6 +418,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'blood',
     std: { low: 13.5, high: 17.5 },
     opt: { low: 14.0, high: 17.0 },
+    femStd: { low: 12.0, high: 15.5 },
+    femOpt: { low: 12.5, high: 15.0 },
     decimals: 1,
     desc: 'Oxygen-carrying protein in red cells — the headline number for anemia and endurance capacity.',
     aliases: ['hgb', 'hb']
@@ -424,6 +432,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'blood',
     std: { low: 38.8, high: 50 },
     opt: { low: 40, high: 49 },
+    femStd: { low: 34.9, high: 44.5 },
+    femOpt: { low: 36, high: 44 },
     decimals: 1,
     desc: 'The fraction of blood volume made of red cells.',
     aliases: ['hct']
@@ -448,6 +458,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'blood',
     std: { low: 4.5, high: 5.9 },
     opt: { low: 4.6, high: 5.8 },
+    femStd: { low: 4.1, high: 5.1 },
+    femOpt: { low: 4.2, high: 5.0 },
     decimals: 2,
     desc: 'Red cell count, read together with hemoglobin and MCV.',
     aliases: ['red blood cell count', 'erythrocytes']
@@ -484,6 +496,8 @@ export const MARKERS: MarkerDef[] = [
     category: 'blood',
     std: { low: 30, high: 400 },
     opt: { low: 50, high: 150 },
+    femStd: { low: 15, high: 150 },
+    femOpt: { low: 40, high: 120 },
     decimals: 0,
     desc: 'The body’s iron store — but also an inflammation-reactive protein, so very high values need context.',
     advice:
@@ -571,8 +585,10 @@ export const MARKERS: MarkerDef[] = [
     category: 'micro',
     std: { low: 300, high: 1000 },
     opt: { low: 500, high: 900 },
+    femStd: { low: 15, high: 70 },
+    femOpt: { low: 20, high: 60 },
     decimals: 0,
-    desc: 'Male reference shown. Drives muscle, bone, mood and libido; sensitive to sleep, body fat and training load.',
+    desc: 'Reference ranges differ by sex — set yours in Settings. Drives muscle, bone, mood and libido; sensitive to sleep, body fat and training load.',
     advice:
       'Sleep 7.5h+, lift heavy, keep body fat moderate, and don’t chronically under-eat — the four biggest natural levers.',
     aliases: ['total testosterone', 'testosterone total', 'testosterone']

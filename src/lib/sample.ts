@@ -7,7 +7,7 @@ import type {
   Workout
 } from '../types'
 import { DEFAULT_PROFILE } from '../types'
-import { addDays, todayISO } from './dates'
+import { addDays, fromISO, todayISO } from './dates'
 
 /** Deterministic PRNG so sample data is stable across loads. */
 function mulberry32(seed: number) {
@@ -23,8 +23,13 @@ function mulberry32(seed: number) {
 /**
  * ~90 days of plausible lifestyle data plus three lab draws over 14 months
  * showing lipids improving with training — enough to light up every view.
+ * Idempotent: refuses to double-load, never overwrites an existing profile,
+ * and skips days that already have metrics. Returns a status message.
  */
-export async function loadSampleData(): Promise<void> {
+export async function loadSampleData(): Promise<string> {
+  if (await db.kv.get('sampleLoaded')) {
+    return 'Sample data is already loaded — use "Delete all data" first to reload it.'
+  }
   const rand = mulberry32(42)
   const today = todayISO()
   const daily: DailyMetrics[] = []
@@ -35,7 +40,7 @@ export async function loadSampleData(): Promise<void> {
 
   for (let i = 89; i >= 0; i--) {
     const date = addDays(today, -i)
-    const weekend = new Date(date).getDay() % 6 === 0
+    const weekend = fromISO(date).getDay() % 6 === 0
     daily.push({
       date,
       steps: Math.round(6500 + rand() * 5500 + (weekend ? 1500 : 0)),
@@ -66,7 +71,7 @@ export async function loadSampleData(): Promise<void> {
       })
     }
 
-    const day = new Date(date).getDay()
+    const day = fromISO(date).getDay()
     if (day === 1 || day === 4) {
       workouts.push({
         date,
@@ -149,19 +154,26 @@ export async function loadSampleData(): Promise<void> {
     'rw',
     [db.labs, db.food, db.workouts, db.daily, db.body],
     async () => {
+      // Days the user already logged stay untouched (date is a unique index).
+      const existingDates = new Set((await db.daily.toArray()).map((d) => d.date))
       await db.labs.bulkAdd(labs)
       await db.food.bulkAdd(food)
       await db.workouts.bulkAdd(workouts)
-      await db.daily.bulkPut(daily)
+      await db.daily.bulkAdd(daily.filter((d) => !existingDates.has(d.date)))
       await db.body.bulkAdd(body)
     }
   )
-  await saveProfile({
-    ...DEFAULT_PROFILE,
-    name: 'Sample',
-    birthYear: 1982,
-    sex: 'male',
-    heightCm: 180,
-    weightTargetKg: 82
-  })
+  const hasProfile = await db.kv.get('profile')
+  if (!hasProfile) {
+    await saveProfile({
+      ...DEFAULT_PROFILE,
+      name: 'Sample',
+      birthYear: 1982,
+      sex: 'male',
+      heightCm: 180,
+      weightTargetKg: 82
+    })
+  }
+  await db.kv.put({ key: 'sampleLoaded', value: true })
+  return 'Sample data loaded — explore the tabs.'
 }

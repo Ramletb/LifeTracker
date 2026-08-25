@@ -41,8 +41,11 @@ export async function exportBackup(): Promise<void> {
   const a = document.createElement('a')
   a.href = url
   a.download = `life-tracker-backup-${todayISO()}.json`
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  a.remove()
+  // Revoking synchronously can cancel the download on Safari/iOS.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
 const stripIds = (rows: unknown[]) =>

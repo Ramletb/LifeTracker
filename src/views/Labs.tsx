@@ -1,23 +1,26 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../db'
+import { db, importLabResults } from '../db'
 import { MARKERS, SYSTEMS, markerById, systemName } from '../data/markers'
 import { fmtMed, todayISO } from '../lib/dates'
 import { parseLabsCSV, type LabImportResult } from '../lib/csv'
-import { fmtRange, markerStatus } from '../lib/score'
+import { fmtRange, markerStatus, rangesFor, type Sex } from '../lib/score'
 import { Sparkline, TrendChart } from '../components/charts'
 import { Card, FileButton, StatusPill } from '../components/ui'
-import type { MarkerDef, SystemId } from '../types'
+import type { MarkerDef, Profile, SystemId } from '../types'
 
 type Filter = 'all' | SystemId
 
 export function Labs({
+  profile,
   focusSystem,
   onFocusHandled
 }: {
+  profile: Profile
   focusSystem: SystemId | null
   onFocusHandled: () => void
 }) {
+  const sex = profile.sex
   const [filter, setFilter] = useState<Filter>('all')
   const [openMarker, setOpenMarker] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
@@ -100,7 +103,7 @@ export function Labs({
               {defs.map((def) => {
                 const rows = byMarker.get(def.id)!
                 const latest = rows[rows.length - 1]
-                const status = markerStatus(def, latest.value)
+                const status = markerStatus(def, latest.value, sex)
                 return (
                   <button
                     key={def.id}
@@ -153,11 +156,12 @@ export function Labs({
       {openMarker && (
         <MarkerDetail
           def={markerById.get(openMarker)!}
+          sex={sex}
           onClose={() => setOpenMarker(null)}
         />
       )}
       {showImport && <ImportLabs onClose={() => setShowImport(false)} />}
-      {showAdd && <AddResult onClose={() => setShowAdd(false)} />}
+      {showAdd && <AddResult sex={sex} onClose={() => setShowAdd(false)} />}
     </>
   )
 }
@@ -193,7 +197,15 @@ function Modal({
 
 export { Modal }
 
-function MarkerDetail({ def, onClose }: { def: MarkerDef; onClose: () => void }) {
+function MarkerDetail({
+  def,
+  sex,
+  onClose
+}: {
+  def: MarkerDef
+  sex?: Sex
+  onClose: () => void
+}) {
   const rows =
     useLiveQuery(
       () => db.labs.where('markerId').equals(def.id).sortBy('date'),
@@ -203,13 +215,14 @@ function MarkerDetail({ def, onClose }: { def: MarkerDef; onClose: () => void })
   const [value, setValue] = useState('')
 
   const latest = rows[rows.length - 1]
+  const { std, opt } = rangesFor(def, sex)
 
   return (
     <Modal title={def.name} onClose={onClose}>
       {latest && (
         <p className="note" style={{ marginTop: 0 }}>
           Latest: <b className="mono">{latest.value.toFixed(def.decimals)} {def.unit}</b>{' '}
-          ({fmtMed(latest.date)}) <StatusPill status={markerStatus(def, latest.value)} />
+          ({fmtMed(latest.date)}) <StatusPill status={markerStatus(def, latest.value, sex)} />
         </p>
       )}
       {rows.length > 0 && (
@@ -217,12 +230,12 @@ function MarkerDetail({ def, onClose }: { def: MarkerDef; onClose: () => void })
           points={rows.map((r) => ({ date: r.date, value: r.value }))}
           unit={def.unit}
           decimals={def.decimals}
-          opt={def.opt}
+          opt={opt}
         />
       )}
       <p className="note">
-        Optimal <b className="mono">{fmtRange(def.opt, def.decimals)}</b> · reference{' '}
-        <b className="mono">{fmtRange(def.std, def.decimals)}</b> {def.unit}
+        Optimal <b className="mono">{fmtRange(opt, def.decimals)}</b> · reference{' '}
+        <b className="mono">{fmtRange(std, def.decimals)}</b> {def.unit}
       </p>
       <p style={{ fontSize: 13.5 }}>{def.desc}</p>
       {def.advice && (
@@ -282,7 +295,7 @@ function MarkerDetail({ def, onClose }: { def: MarkerDef; onClose: () => void })
                     {r.value.toFixed(def.decimals)} {def.unit}
                   </td>
                   <td>
-                    <StatusPill status={markerStatus(def, r.value)} />
+                    <StatusPill status={markerStatus(def, r.value, sex)} />
                   </td>
                   <td>
                     <button
@@ -304,12 +317,13 @@ function MarkerDetail({ def, onClose }: { def: MarkerDef; onClose: () => void })
   )
 }
 
-function AddResult({ onClose }: { onClose: () => void }) {
+function AddResult({ sex, onClose }: { sex?: Sex; onClose: () => void }) {
   const [markerId, setMarkerId] = useState(MARKERS[0].id)
   const [date, setDate] = useState(todayISO())
   const [value, setValue] = useState('')
   const [saved, setSaved] = useState<string | null>(null)
   const def = markerById.get(markerId)!
+  const { std, opt } = rangesFor(def, sex)
 
   return (
     <Modal title="Add lab result" onClose={onClose}>
@@ -364,8 +378,8 @@ function AddResult({ onClose }: { onClose: () => void }) {
         </div>
       </form>
       <p className="note">
-        Optimal {fmtRange(def.opt, def.decimals)} · reference{' '}
-        {fmtRange(def.std, def.decimals)} {def.unit}. {def.desc}
+        Optimal {fmtRange(opt, def.decimals)} · reference{' '}
+        {fmtRange(std, def.decimals)} {def.unit}. {def.desc}
       </p>
     </Modal>
   )
@@ -376,7 +390,10 @@ function ImportLabs({ onClose }: { onClose: () => void }) {
   const [preview, setPreview] = useState<LabImportResult | null>(null)
   const [done, setDone] = useState<string | null>(null)
 
-  const runPreview = (text: string) => setPreview(parseLabsCSV(text))
+  const runPreview = (text: string) => {
+    setPreview(parseLabsCSV(text))
+    setDone(null)
+  }
 
   return (
     <Modal title="Import lab results" onClose={onClose}>
@@ -427,8 +444,10 @@ function ImportLabs({ onClose }: { onClose: () => void }) {
               className="btn btn-primary"
               type="button"
               onClick={async () => {
-                await db.labs.bulkAdd(preview.results)
-                setDone(`Imported ${preview.results.length} results.`)
+                const { added, skipped } = await importLabResults(preview.results)
+                setDone(
+                  `Imported ${added} results.${skipped > 0 ? ` Skipped ${skipped} already-recorded duplicates.` : ''}`
+                )
               }}
             >
               Import {preview.results.length} results

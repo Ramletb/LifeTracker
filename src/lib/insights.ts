@@ -9,7 +9,7 @@ import type {
   Workout
 } from '../types'
 import { fmtMed } from './dates'
-import { fmtRange, markerStatus, scoreMarker } from './score'
+import { fmtRange, markerStatus, rangesFor, scoreMarker } from './score'
 
 export interface InsightInputs {
   labs: LabResult[]
@@ -41,25 +41,32 @@ const mean = (xs: number[]) =>
 export function buildInsights(inp: InsightInputs): Insight[] {
   const out: Insight[] = []
   const latest = latestLabs(inp.labs)
+  const sex = inp.profile.sex
 
   // ── Lab-driven cards, worst first ─────────────────────────────────
   const scored = [...latest.values()]
     .map((r) => {
       const def = markerById.get(r.markerId)
       if (!def) return undefined
-      return { r, def, score: scoreMarker(def, r.value), status: markerStatus(def, r.value) }
+      return {
+        r,
+        def,
+        score: scoreMarker(def, r.value, sex),
+        status: markerStatus(def, r.value, sex)
+      }
     })
     .filter((x): x is NonNullable<typeof x> => x !== undefined)
     .filter((x) => x.status !== 'optimal')
     .sort((a, b) => a.score - b.score)
 
   for (const { r, def, status } of scored.slice(0, 6)) {
+    const { std, opt } = rangesFor(def, sex)
     out.push({
       id: `lab-${def.id}`,
       severity: status === 'out' ? 'act' : 'watch',
       title: `${def.name}: ${r.value.toFixed(def.decimals)} ${def.unit}`,
       body: def.advice ?? def.desc,
-      dataLine: `Drawn ${fmtMed(r.date)} · optimal ${fmtRange(def.opt, def.decimals)} · reference ${fmtRange(def.std, def.decimals)} ${def.unit}`
+      dataLine: `Drawn ${fmtMed(r.date)} · optimal ${fmtRange(opt, def.decimals)} · reference ${fmtRange(std, def.decimals)} ${def.unit}`
     })
   }
 
@@ -186,21 +193,12 @@ export function buildInsights(inp: InsightInputs): Insight[] {
     }
   }
 
-  if (out.length === 0) {
-    out.push({
-      id: 'empty',
-      severity: 'info',
-      title: 'Log some data to get coaching',
-      body: 'Add blood test results, food, workouts or daily metrics and this page turns them into prioritized suggestions. Try the sample data in Settings to see how it works.'
-    })
-  }
-
   // Everything optimal?
   if (
     latest.size > 0 &&
     [...latest.values()].every((r) => {
       const def = markerById.get(r.markerId)
-      return def ? markerStatus(def, r.value) === 'optimal' : true
+      return def ? markerStatus(def, r.value, sex) === 'optimal' : true
     })
   ) {
     out.unshift({
@@ -208,6 +206,15 @@ export function buildInsights(inp: InsightInputs): Insight[] {
       severity: 'good',
       title: 'Every tracked marker is in its optimal range',
       body: 'Genuinely rare and worth protecting. Keep the habits that got you here, and re-test in 6–12 months to confirm the trend.'
+    })
+  }
+
+  if (out.length === 0) {
+    out.push({
+      id: 'empty',
+      severity: 'info',
+      title: 'Log some data to get coaching',
+      body: 'Add blood test results, food, workouts or daily metrics and this page turns them into prioritized suggestions. Try the sample data in Settings to see how it works.'
     })
   }
 

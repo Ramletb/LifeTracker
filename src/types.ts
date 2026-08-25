@@ -104,6 +104,9 @@ export interface MarkerDef {
   std: Range
   /** tighter "optimal" range used for scoring and coaching */
   opt: Range
+  /** female-specific overrides for sex-dimorphic markers */
+  femStd?: Range
+  femOpt?: Range
   decimals: number
   desc: string
   advice?: string

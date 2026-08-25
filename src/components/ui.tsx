@@ -60,7 +60,11 @@ export function StatTile({
       {(sub || deltaText) && (
         <div className="stat-sub">
           {deltaText && (
-            <span className={`stat-delta ${deltaGood ? 'is-good' : 'is-bad'}`}>
+            <span
+              className={`stat-delta${
+                deltaGood === undefined ? '' : deltaGood ? ' is-good' : ' is-bad'
+              }`}
+            >
               {deltaText}
             </span>
           )}

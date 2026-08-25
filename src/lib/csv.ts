@@ -63,8 +63,12 @@ function col(headers: string[], ...names: string[]): number {
 
 function num(raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined
-  const cleaned = raw.replace(/[,]/g, '').replace(/[^0-9.\-]/g, '')
-  if (cleaned === '' || cleaned === '-' || cleaned === '.') return undefined
+  const s = raw.trim()
+  // Time-formatted values ("0:31:47") would strip to a garbage number —
+  // reject rather than misparse.
+  if (s === '' || s.includes(':')) return undefined
+  const cleaned = s.replace(/,/g, '').replace(/[^0-9.\-]/g, '')
+  if (!/^-?\d*\.?\d+$/.test(cleaned)) return undefined
   const v = Number(cleaned)
   return Number.isFinite(v) ? v : undefined
 }
@@ -213,12 +217,19 @@ export function parseDailyCSV(text: string): DailyImportResult {
     const date = parseDate(r[dateIdx] ?? '')
     if (!date) continue
     const entry: DailyMetrics = { date }
-    if (stepsIdx >= 0) entry.steps = num(r[stepsIdx])
-    if (sleepIdx >= 0) entry.sleepHours = num(r[sleepIdx])
-    if (rhrIdx >= 0) entry.restingHr = num(r[rhrIdx])
-    if (actIdx >= 0) entry.activeCalories = num(r[actIdx])
-    if (sysIdx >= 0) entry.systolic = num(r[sysIdx])
-    if (diaIdx >= 0) entry.diastolic = num(r[diaIdx])
+    // Only set fields that actually parsed: a blank cell must leave any
+    // previously logged value alone (Dexie deletes undefined-valued keys).
+    const set = (k: keyof DailyMetrics, idx: number) => {
+      if (idx < 0) return
+      const v = num(r[idx])
+      if (v !== undefined) Object.assign(entry, { [k]: v })
+    }
+    set('steps', stepsIdx)
+    set('sleepHours', sleepIdx)
+    set('restingHr', rhrIdx)
+    set('activeCalories', actIdx)
+    set('systolic', sysIdx)
+    set('diastolic', diaIdx)
     if (Object.keys(entry).length > 1) out.entries.push(entry)
   }
   return out
