@@ -17,6 +17,7 @@ export interface FoodEntry {
   protein: number
   carbs: number
   fat: number
+  satFat?: number
   fiber?: number
   sodium?: number // mg
 }
@@ -77,6 +78,17 @@ export const DEFAULT_PROFILE: Profile = {
   stepTarget: 8000,
   sleepTarget: 7.5,
   theme: 'auto'
+}
+
+export interface Goal {
+  id?: number
+  title: string
+  distanceKm: number
+  /** race day, ISO */
+  date: string
+  /** when training started, ISO */
+  startDate: string
+  note?: string
 }
 
 export type SystemId =

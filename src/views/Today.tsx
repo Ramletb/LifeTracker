@@ -6,16 +6,19 @@ import { systemScores } from '../lib/score'
 import { fmtWeekday, lastNDays, todayISO } from '../lib/dates'
 import { Columns, MacroBar } from '../components/charts'
 import { Card, StatTile, SystemRing } from '../components/ui'
+import { GoalSnapshot } from './Goals'
 import type { Profile, SystemId } from '../types'
 
 export function Today({
   profile,
   onOpenSystem,
-  onGoLog
+  onGoLog,
+  onGoGoals
 }: {
   profile: Profile
   onOpenSystem: (s: SystemId) => void
   onGoLog: () => void
+  onGoGoals: () => void
 }) {
   const today = todayISO()
   const days14 = lastNDays(14)
@@ -96,6 +99,8 @@ export function Today({
           </p>
         )}
       </Card>
+
+      <GoalSnapshot onGoGoals={onGoGoals} />
 
       <div className="tile-grid">
         <StatTile

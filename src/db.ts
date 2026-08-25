@@ -3,11 +3,13 @@ import type {
   BodyEntry,
   DailyMetrics,
   FoodEntry,
+  Goal,
   LabResult,
   Profile,
   Workout
 } from './types'
 import { DEFAULT_PROFILE } from './types'
+import type { ParsedEntry } from './lib/voice'
 
 interface KV {
   key: string
@@ -20,6 +22,7 @@ export class LifeDB extends Dexie {
   workouts!: Table<Workout, number>
   daily!: Table<DailyMetrics, number>
   body!: Table<BodyEntry, number>
+  goals!: Table<Goal, number>
   kv!: Table<KV, string>
 
   constructor() {
@@ -31,6 +34,9 @@ export class LifeDB extends Dexie {
       daily: '++id, &date',
       body: '++id, date',
       kv: '&key'
+    })
+    this.version(2).stores({
+      goals: '++id, date'
     })
   }
 }
@@ -72,8 +78,58 @@ export async function wipeAllData(): Promise<void> {
     db.workouts.clear(),
     db.daily.clear(),
     db.body.clear(),
+    db.goals.clear(),
     db.kv.clear()
   ])
+}
+
+/**
+ * Persist a parsed voice entry into the right table. Returns a short
+ * confirmation line. Throws on 'unknown'.
+ */
+export async function saveParsedEntry(entry: ParsedEntry): Promise<string> {
+  switch (entry.kind) {
+    case 'workout':
+      await db.workouts.add({
+        date: entry.date,
+        type: entry.type,
+        minutes: entry.minutes ?? 0,
+        distanceKm: entry.distanceKm,
+        calories: entry.calories,
+        avgHr: entry.avgHr,
+        note: 'voice'
+      })
+      return `Logged ${entry.type.toLowerCase()} on ${entry.date}`
+    case 'food':
+      await db.food.add({
+        date: entry.date,
+        meal: entry.meal,
+        name: entry.name,
+        calories: entry.calories ?? 0,
+        protein: entry.protein ?? 0,
+        carbs: entry.carbs ?? 0,
+        fat: entry.fat ?? 0,
+        satFat: entry.satFat,
+        fiber: entry.fiber,
+        sodium: entry.sodium
+      })
+      return `Logged ${entry.meal} on ${entry.date}`
+    case 'daily': {
+      const { kind: _kind, date, ...patch } = entry
+      await upsertDaily(date, patch)
+      return `Updated daily metrics for ${date}`
+    }
+    case 'body':
+      await db.body.add({
+        date: entry.date,
+        weightKg: entry.weightKg,
+        bodyFatPct: entry.bodyFatPct,
+        source: 'voice'
+      })
+      return `Logged body entry for ${entry.date}`
+    case 'unknown':
+      throw new Error('Nothing recognizable to save.')
+  }
 }
 
 export interface ImportCounts {

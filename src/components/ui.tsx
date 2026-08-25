@@ -227,15 +227,15 @@ const ICONS: Record<string, ReactNode> = {
       <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   ),
-  body: (
+  goals: (
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <circle cx="12" cy="6" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path
-        d="M6 21v-4a6 6 0 0 1 12 0v4"
+        d="M6 21V4m0 0h11l-2.5 4L17 12H6"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   ),
@@ -252,7 +252,7 @@ const ICONS: Record<string, ReactNode> = {
   )
 }
 
-export type TabId = 'today' | 'labs' | 'log' | 'body' | 'coach'
+export type TabId = 'today' | 'labs' | 'log' | 'goals' | 'coach'
 
 export function TabBar({
   tab,
@@ -265,7 +265,7 @@ export function TabBar({
     { id: 'today', label: 'Today' },
     { id: 'labs', label: 'Labs' },
     { id: 'log', label: 'Log' },
-    { id: 'body', label: 'Body' },
+    { id: 'goals', label: 'Goals' },
     { id: 'coach', label: 'Coach' }
   ]
   return (
