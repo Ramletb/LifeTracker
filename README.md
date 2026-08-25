@@ -1,4 +1,4 @@
-# Ramlet Life Tracker
+# Life Tracker
 
 A personal health console you run on your own phone: blood biomarkers, food,
 exercise, sleep and body composition in one place, scored against optimal
