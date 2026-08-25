@@ -6,13 +6,15 @@ import { TabBar, type TabId } from './components/ui'
 import { Today } from './views/Today'
 import { Labs } from './views/Labs'
 import { Log } from './views/Log'
-import { Body } from './views/Body'
+import { Goals } from './views/Goals'
 import { Coach } from './views/Coach'
 import { Settings } from './views/Settings'
+import { VoiceSheet } from './components/VoiceSheet'
 
 export default function App() {
   const [tab, setTab] = useState<TabId>('today')
   const [showSettings, setShowSettings] = useState(false)
+  const [showVoice, setShowVoice] = useState(false)
   const [focusSystem, setFocusSystem] = useState<SystemId | null>(null)
 
   const profile: Profile = useLiveQuery(getProfile, []) ?? DEFAULT_PROFILE
@@ -58,6 +60,7 @@ export default function App() {
               setTab('labs')
             }}
             onGoLog={() => setTab('log')}
+            onGoGoals={() => setTab('goals')}
           />
         )}
         {tab === 'labs' && (
@@ -68,11 +71,30 @@ export default function App() {
           />
         )}
         {tab === 'log' && <Log profile={profile} />}
-        {tab === 'body' && <Body profile={profile} />}
+        {tab === 'goals' && <Goals onOpenVoice={() => setShowVoice(true)} />}
         {tab === 'coach' && <Coach profile={profile} />}
       </main>
 
+      <button
+        type="button"
+        className="mic-fab"
+        aria-label="Voice log — say what you ate, ran or slept"
+        onClick={() => setShowVoice(true)}
+      >
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+          <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+          <path
+            d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
       <TabBar tab={tab} onChange={setTab} />
+      {showVoice && <VoiceSheet onClose={() => setShowVoice(false)} />}
       {showSettings && (
         <Settings profile={profile} onClose={() => setShowSettings(false)} />
       )}

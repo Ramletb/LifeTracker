@@ -15,9 +15,10 @@ import {
 } from '../lib/csv'
 import { MacroBar } from '../components/charts'
 import { Card, FileButton, Seg } from '../components/ui'
+import { Body } from './Body'
 import type { DailyMetrics, Meal, Profile } from '../types'
 
-type SubTab = 'food' | 'workouts' | 'daily'
+type SubTab = 'food' | 'workouts' | 'daily' | 'body'
 
 export function Log({ profile }: { profile: Profile }) {
   const [sub, setSub] = useState<SubTab>('food')
@@ -29,33 +30,37 @@ export function Log({ profile }: { profile: Profile }) {
         options={[
           { id: 'food', label: 'Food' },
           { id: 'workouts', label: 'Workouts' },
-          { id: 'daily', label: 'Daily' }
+          { id: 'daily', label: 'Daily' },
+          { id: 'body', label: 'Body' }
         ]}
         value={sub}
         onChange={setSub}
       />
-      <div className="form-row" style={{ marginTop: 0, alignItems: 'center' }}>
-        <button className="btn btn-sm" type="button" onClick={() => setDate(addDays(date, -1))}>
-          ←
-        </button>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ width: 'auto', flex: 1 }}
-        />
-        <button
-          className="btn btn-sm"
-          type="button"
-          disabled={date >= todayISO()}
-          onClick={() => setDate(addDays(date, 1))}
-        >
-          →
-        </button>
-      </div>
+      {sub !== 'body' && (
+        <div className="form-row" style={{ marginTop: 0, alignItems: 'center' }}>
+          <button className="btn btn-sm" type="button" onClick={() => setDate(addDays(date, -1))}>
+            ←
+          </button>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={{ width: 'auto', flex: 1 }}
+          />
+          <button
+            className="btn btn-sm"
+            type="button"
+            disabled={date >= todayISO()}
+            onClick={() => setDate(addDays(date, 1))}
+          >
+            →
+          </button>
+        </div>
+      )}
       {sub === 'food' && <FoodLog date={date} profile={profile} />}
       {sub === 'workouts' && <WorkoutLog date={date} />}
       {sub === 'daily' && <DailyLog date={date} />}
+      {sub === 'body' && <Body profile={profile} />}
     </>
   )
 }
@@ -86,6 +91,7 @@ function FoodLog({ date, profile }: { date: string; profile: Profile }) {
   const carbs = entries.reduce((a, f) => a + f.carbs, 0)
   const fat = entries.reduce((a, f) => a + f.fat, 0)
   const fiber = entries.reduce((a, f) => a + (f.fiber ?? 0), 0)
+  const satFat = entries.reduce((a, f) => a + (f.satFat ?? 0), 0)
 
   return (
     <>
@@ -107,6 +113,7 @@ function FoodLog({ date, profile }: { date: string; profile: Profile }) {
         />
         <p className="note" style={{ marginBottom: 0 }}>
           Fiber {Math.round(fiber)}g of {profile.fiberTarget}g
+          {satFat > 0 ? ` · Sat fat ${Math.round(satFat)}g` : ''}
         </p>
       </Card>
 

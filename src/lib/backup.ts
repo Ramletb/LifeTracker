@@ -12,15 +12,17 @@ interface BackupFile {
   workouts: unknown[]
   daily: unknown[]
   body: unknown[]
+  goals?: unknown[]
 }
 
 export async function exportBackup(): Promise<void> {
-  const [labs, food, workouts, daily, body, profile] = await Promise.all([
+  const [labs, food, workouts, daily, body, goals, profile] = await Promise.all([
     db.labs.toArray(),
     db.food.toArray(),
     db.workouts.toArray(),
     db.daily.toArray(),
     db.body.toArray(),
+    db.goals.toArray(),
     getProfile()
   ])
   const payload: BackupFile = {
@@ -32,7 +34,8 @@ export async function exportBackup(): Promise<void> {
     food,
     workouts,
     daily,
-    body
+    body,
+    goals
   }
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: 'application/json'
@@ -67,20 +70,22 @@ export async function importBackup(text: string): Promise<string> {
   }
   await db.transaction(
     'rw',
-    [db.labs, db.food, db.workouts, db.daily, db.body],
+    [db.labs, db.food, db.workouts, db.daily, db.body, db.goals],
     async () => {
       await Promise.all([
         db.labs.clear(),
         db.food.clear(),
         db.workouts.clear(),
         db.daily.clear(),
-        db.body.clear()
+        db.body.clear(),
+        db.goals.clear()
       ])
       await db.labs.bulkAdd(stripIds(parsed.labs ?? []) as never[])
       await db.food.bulkAdd(stripIds(parsed.food ?? []) as never[])
       await db.workouts.bulkAdd(stripIds(parsed.workouts ?? []) as never[])
       await db.daily.bulkAdd(stripIds(parsed.daily ?? []) as never[])
       await db.body.bulkAdd(stripIds(parsed.body ?? []) as never[])
+      await db.goals.bulkAdd(stripIds(parsed.goals ?? []) as never[])
     }
   )
   if (parsed.profile) await saveProfile(parsed.profile)

@@ -157,6 +157,7 @@ export function parseFoodCSV(text: string): FoodImportResult {
   const calIdx = col(headers, 'calories', 'energy', 'kcal', 'cals')
   const proIdx = col(headers, 'protein')
   const carbIdx = col(headers, 'carbs', 'carbohydrate', 'total carbs')
+  const satFatIdx = col(headers, 'saturated fat', 'sat fat')
   const fatIdx = col(headers, 'fat', 'total fat')
   const fiberIdx = col(headers, 'fiber', 'dietary fiber')
   const sodiumIdx = col(headers, 'sodium')
@@ -180,6 +181,7 @@ export function parseFoodCSV(text: string): FoodImportResult {
       protein: (proIdx >= 0 ? num(r[proIdx]) : undefined) ?? 0,
       carbs: (carbIdx >= 0 ? num(r[carbIdx]) : undefined) ?? 0,
       fat: (fatIdx >= 0 ? num(r[fatIdx]) : undefined) ?? 0,
+      satFat: satFatIdx >= 0 ? num(r[satFatIdx]) : undefined,
       fiber: fiberIdx >= 0 ? num(r[fiberIdx]) : undefined,
       sodium: sodiumIdx >= 0 ? num(r[sodiumIdx]) : undefined
     })

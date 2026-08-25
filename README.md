@@ -10,6 +10,21 @@ a JSON file you control.
 
 ## What it does
 
+- **Voice logging (the front door)** — a floating mic on every screen.
+  Say “I ran for 25 minutes, completed 2 miles”, “grilled chicken and rice
+  for lunch, about 650 calories, 40 grams of protein, 8 grams of saturated
+  fat”, “slept 7 and a half hours” or “I weigh 188 pounds” and the entry is
+  parsed, shown in an editable confirmation card, and saved. Backdating
+  works — “last Tuesday I ran a 5k”, “on August 18th…”. Uses the browser’s
+  built-in speech recognition (Chrome/Android); a type-it-in fallback covers
+  everything else.
+- **Goals** — set a race (e.g. a 10K on Nov 26) and get an adaptive
+  training plan: a weekly long-run ramp (capped at +15%/week) from your
+  current ability to race distance, with a taper. The plan is recomputed
+  live from your logged runs — voice in a missed week later and every
+  remaining target re-plots. The runner track shows completed weeks as
+  filled bars, planned long runs as ghost bars, a runner at today and the
+  flag at race day.
 - **Today** — a systems board that scores eight body systems
   (cardiovascular, metabolic, inflammation, liver, kidney, thyroid, blood,
   micronutrients) from your latest labs, plus tiles for steps, calories,
@@ -22,8 +37,8 @@ a JSON file you control.
 - **Log** — food (quick add or MyNetDiary CSV export import), workouts
   (quick add or Apple Health/Watch CSV import) and daily metrics (steps,
   sleep, resting HR, blood pressure).
-- **Body** — weigh-ins and body scans (DEXA/InBody): weight, body fat %,
-  lean mass, waist, visceral fat, with trends and BMI.
+- **Body** (inside Log) — weigh-ins and body scans (DEXA/InBody): weight,
+  body fat %, lean mass, waist, visceral fat, with trends and BMI.
 - **Coach** — transparent, rule-based coaching: which markers are out of
   their optimal range and what usually moves them, HOMA-IR when glucose +
   insulin were drawn together, protein/fiber/step/sleep gaps, strength
