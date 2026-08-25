@@ -35,7 +35,7 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
         }
         action={
           <button className="btn-ghost" type="button" onClick={onOpenVoice}>
-            🎤 Log a run
+            Log a run
           </button>
         }
       >
@@ -90,7 +90,7 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
           label="Logged"
           value={plan.totalLoggedKm.toFixed(0)}
           unit="km"
-          sub={`${plan.runsLogged} runs`}
+          sub={`${plan.runsLogged} run${plan.runsLogged === 1 ? '' : 's'}`}
         />
       </div>
 
