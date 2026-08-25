@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, importLabResults } from '../db'
+import { db, importBodyMeasurements, importLabResults } from '../db'
 import { MARKERS, SYSTEMS, markerById, systemName } from '../data/markers'
 import { fmtMed, todayISO } from '../lib/dates'
 import { parseLabsCSV, type LabImportResult } from '../lib/csv'
@@ -389,6 +389,7 @@ function ImportLabs({ onClose }: { onClose: () => void }) {
   const [pasted, setPasted] = useState('')
   const [preview, setPreview] = useState<LabImportResult | null>(null)
   const [done, setDone] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
 
   const runPreview = (text: string) => {
     setPreview(parseLabsCSV(text))
@@ -428,10 +429,27 @@ function ImportLabs({ onClose }: { onClose: () => void }) {
       )}
       {preview && (
         <div style={{ marginTop: 10 }}>
-          <p className="msg-ok">{preview.results.length} results matched.</p>
+          <p className="msg-ok">
+            {preview.results.length} lab results matched
+            {preview.body.length > 0
+              ? `, plus ${preview.body.length} body measurement${preview.body.length > 1 ? 's' : ''} (weight/body fat) for the Body log`
+              : ''}
+            .
+          </p>
+          {preview.derived.length > 0 && (
+            <p className="note">
+              Skipped {preview.derived.join(', ')} — the app computes it from
+              your height and weight.
+            </p>
+          )}
+          {preview.notes.map((n, i) => (
+            <p key={i} className="note">
+              {n}
+            </p>
+          ))}
           {preview.unmatched.length > 0 && (
             <p className="msg-err">
-              Unrecognized markers (skipped): {preview.unmatched.join(', ')}
+              Not in the marker catalog (skipped): {preview.unmatched.join(', ')}
             </p>
           )}
           {preview.errors.map((e, i) => (
@@ -439,18 +457,31 @@ function ImportLabs({ onClose }: { onClose: () => void }) {
               {e}
             </p>
           ))}
-          {preview.results.length > 0 && !done && (
+          {(preview.results.length > 0 || preview.body.length > 0) && !done && (
             <button
               className="btn btn-primary"
               type="button"
+              disabled={importing}
               onClick={async () => {
-                const { added, skipped } = await importLabResults(preview.results)
-                setDone(
-                  `Imported ${added} results.${skipped > 0 ? ` Skipped ${skipped} already-recorded duplicates.` : ''}`
-                )
+                if (importing) return
+                setImporting(true)
+                try {
+                  const labCounts = await importLabResults(preview.results)
+                  const bodyCounts = await importBodyMeasurements(preview.body)
+                  const parts = [`Imported ${labCounts.added} lab results.`]
+                  if (bodyCounts.added > 0)
+                    parts.push(`Saved ${bodyCounts.added} body measurement${bodyCounts.added > 1 ? 's' : ''}.`)
+                  const dup = labCounts.skipped + bodyCounts.skipped
+                  if (dup > 0) parts.push(`Skipped ${dup} already-recorded duplicates.`)
+                  setDone(parts.join(' '))
+                } finally {
+                  setImporting(false)
+                }
               }}
             >
-              Import {preview.results.length} results
+              {importing
+                ? 'Importing…'
+                : `Import ${preview.results.length + preview.body.length} entries`}
             </button>
           )}
           {done && <p className="msg-ok">{done}</p>}
