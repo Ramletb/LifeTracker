@@ -13,7 +13,7 @@ const executablePath =
 const svg = readFileSync(resolve('public/icons/icon.svg'), 'utf8')
 const maskableSvg = svg.replace(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">',
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#0e6b5e"/><g transform="translate(51.2 51.2) scale(0.8)">'
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#1b1b1b"/><g transform="translate(51.2 51.2) scale(0.8)">'
 ).replace('</svg>', '</g></svg>')
 
 const targets = [
