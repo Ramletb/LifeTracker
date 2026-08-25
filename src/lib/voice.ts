@@ -430,7 +430,7 @@ export function describeEntry(e: ParsedEntry): string {
     case 'workout': {
       const bits = [e.type]
       if (e.minutes) bits.push(`${e.minutes} min`)
-      if (e.distanceKm) bits.push(`${e.distanceKm.toFixed(1)} km (${kmToMiles(e.distanceKm).toFixed(1)} mi)`)
+      if (e.distanceKm) bits.push(`${kmToMiles(e.distanceKm).toFixed(1)} mi (${e.distanceKm.toFixed(1)} km)`)
       if (e.calories) bits.push(`${e.calories} kcal`)
       return bits.join(' · ')
     }

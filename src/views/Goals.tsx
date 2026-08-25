@@ -7,7 +7,9 @@ import { kmToMiles } from '../lib/voice'
 import { Card, StatTile } from '../components/ui'
 import type { Goal } from '../types'
 
-const fmtDist = (km: number) => `${km.toFixed(1)} km · ${kmToMiles(km).toFixed(1)} mi`
+/** Miles first — that's how runs get tracked here — with km alongside. */
+const fmtDist = (km: number) => `${kmToMiles(km).toFixed(1)} mi · ${km.toFixed(1)} km`
+const mi = (km: number) => kmToMiles(km).toFixed(1)
 
 export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
   const goals = useLiveQuery(() => db.goals.toArray(), []) ?? []
@@ -53,7 +55,8 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
         {!plan.achievable && (
           <p className="msg-err" style={{ marginBottom: 0 }}>
             Heads-up: with a safe weekly build (+15%), the longest run reaches{' '}
-            {plan.peakKm} km before race day, short of {goal.distanceKm} km.
+            {mi(plan.peakKm)} mi ({plan.peakKm} km) before race day, short of{' '}
+            {mi(goal.distanceKm)} mi ({goal.distanceKm} km).
             You can still run-walk the race — or keep logging runs and this
             plan re-plots itself.
           </p>
@@ -67,7 +70,7 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
             {plan.thisWeek.longDone
               ? ' Long run: done ✓'
               : plan.thisWeek.runsDone > 0
-                ? ` Logged ${plan.thisWeek.runsDone} run${plan.thisWeek.runsDone > 1 ? 's' : ''} so far (longest ${plan.thisWeek.longestKm} km).`
+                ? ` Logged ${plan.thisWeek.runsDone} run${plan.thisWeek.runsDone > 1 ? 's' : ''} so far (longest ${mi(plan.thisWeek.longestKm)} mi).`
                 : ' Nothing logged yet this week.'}
           </p>
         </Card>
@@ -76,21 +79,21 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
       <div className="tile-grid">
         <StatTile
           label="Ability now"
-          value={plan.currentKm.toFixed(1)}
-          unit="km"
-          sub={`${kmToMiles(plan.currentKm).toFixed(1)} mi longest recent`}
+          value={mi(plan.currentKm)}
+          unit="mi"
+          sub={`${plan.currentKm.toFixed(1)} km longest recent`}
         />
         <StatTile
           label="Since start"
-          value={`+${Math.max(0, plan.currentKm - plan.baselineKm).toFixed(1)}`}
-          unit="km"
-          sub={`from ${plan.baselineKm.toFixed(1)} km base`}
+          value={`+${mi(Math.max(0, plan.currentKm - plan.baselineKm))}`}
+          unit="mi"
+          sub={`from a ${mi(plan.baselineKm)} mi base`}
         />
         <StatTile
           label="Logged"
-          value={plan.totalLoggedKm.toFixed(0)}
-          unit="km"
-          sub={`${plan.runsLogged} run${plan.runsLogged === 1 ? '' : 's'}`}
+          value={kmToMiles(plan.totalLoggedKm).toFixed(0)}
+          unit="mi"
+          sub={`${plan.runsLogged} run${plan.runsLogged === 1 ? '' : 's'} · ${plan.totalLoggedKm.toFixed(0)} km`}
         />
       </div>
 
@@ -113,11 +116,13 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
                     {fmtShort(w.start)}–{fmtShort(w.end)}
                   </td>
                   <td className="num">
-                    {w.targetKm !== null ? `${w.targetKm.toFixed(1)} km` : '—'}
+                    {w.targetKm !== null
+                      ? `${mi(w.targetKm)} mi · ${w.targetKm.toFixed(1)} km`
+                      : '—'}
                   </td>
                   <td className="num">
                     {w.actualKm > 0
-                      ? `${w.actualKm.toFixed(1)} km${w.targetKm !== null && w.actualKm >= w.targetKm ? ' ✓' : ''}`
+                      ? `${mi(w.actualKm)} mi${w.targetKm !== null && w.actualKm >= w.targetKm ? ' ✓' : ''}`
                       : w.isPast
                         ? '·'
                         : ''}
@@ -210,10 +215,10 @@ function CreateGoal() {
         <label className="field">
           Distance
           <select value={distance} onChange={(e) => setDistance(e.target.value)}>
-            <option value="5">5K</option>
-            <option value="10">10K</option>
-            <option value="21.1">Half marathon</option>
-            <option value="42.2">Marathon</option>
+            <option value="5">5K (3.1 mi)</option>
+            <option value="10">10K (6.2 mi)</option>
+            <option value="21.1">Half marathon (13.1 mi)</option>
+            <option value="42.2">Marathon (26.2 mi)</option>
           </select>
         </label>
         <label className="field">
@@ -347,9 +352,9 @@ function RunnerTrack({ plan, goal }: { plan: Plan; goal: Goal }) {
             {fmtShort(tip.start)}–{fmtShort(tip.end)}
           </span>
           <span className="tt-value">
-            {tip.targetKm !== null ? `target ${tip.targetKm.toFixed(1)} km` : ''}
+            {tip.targetKm !== null ? `target ${mi(tip.targetKm)} mi (${tip.targetKm.toFixed(1)} km)` : ''}
             {tip.targetKm !== null && tip.actualKm > 0 ? ' · ' : ''}
-            {tip.actualKm > 0 ? `done ${tip.actualKm.toFixed(1)} km` : tip.isPast ? 'no runs' : ''}
+            {tip.actualKm > 0 ? `done ${mi(tip.actualKm)} mi` : tip.isPast ? 'no runs' : ''}
           </span>
         </div>
       )}
