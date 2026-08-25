@@ -211,7 +211,27 @@ function EntryEditor({
             </select>
           </label>
           {numField('minutes', 'Minutes', entry.minutes, '1')}
-          {numField('distanceKm', 'Distance (km)', entry.distanceKm)}
+          <label className="field" key="distanceMi">
+            Distance (mi)
+            <input
+              type="number"
+              step="any"
+              inputMode="decimal"
+              value={
+                entry.distanceKm !== undefined
+                  ? Math.round((entry.distanceKm / 1.60934) * 100) / 100
+                  : ''
+              }
+              onChange={(e) =>
+                set(
+                  'distanceKm',
+                  e.target.value === ''
+                    ? undefined
+                    : Math.round(Number(e.target.value) * 1.60934 * 100) / 100
+                )
+              }
+            />
+          </label>
           {numField('calories', 'Calories', entry.calories, '1')}
           {numField('avgHr', 'Avg HR', entry.avgHr, '1')}
         </div>
