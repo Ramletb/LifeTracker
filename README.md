@@ -51,10 +51,15 @@ npm run build      # typecheck + production build to dist/
 ## Deploying to GitHub Pages (free hosting)
 
 The repo ships with `.github/workflows/deploy.yml`, which builds and deploys
-on every push to `main`. One-time setup: in the GitHub repo go to
-**Settings → Pages** and set **Source** to **GitHub Actions**. After the next
-push to `main` the app is live at
-`https://<user>.github.io/<repo>/`.
+on every push to `main` and enables Pages automatically on first run. The
+app goes live at `https://<user>.github.io/<repo>/`.
+
+Two GitHub-account caveats: Pages on a **private** repo requires GitHub
+Pro/Team (on the Free plan, make the repo public — the app holds no personal
+data; everything you log stays in your own browser). And the deploy uploads
+a small build artifact, so it can fail temporarily if the account's Actions
+artifact storage quota is exhausted — re-run the workflow after the quota
+window resets.
 
 ## Import formats
 
