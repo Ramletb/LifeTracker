@@ -73,19 +73,43 @@ function num(raw: string | undefined): number | undefined {
   return Number.isFinite(v) ? v : undefined
 }
 
+export interface BodyImportRow {
+  date: string
+  weightKg?: number
+  bodyFatPct?: number
+}
+
 export interface LabImportResult {
   results: LabResult[]
+  /** Body-composition rows (Weight, Body Fat %) routed to the Body log. */
+  body: BodyImportRow[]
+  /** Recognized but skipped because the app derives them (e.g. BMI). */
+  derived: string[]
   unmatched: string[]
+  /** Informational messages worth showing in the preview (e.g. unit conversions). */
+  notes: string[]
   errors: string[]
 }
 
+const LB_TO_KG = 0.453592
+
 /**
- * Import lab results from CSV with columns like: date, marker/test/name, value
- * (unit column is ignored — values are assumed to be in the app's units).
+ * Import lab results from CSV with columns like: date, marker/test/name, value.
+ * Weight and Body Fat % rows are routed to the Body log. Weight units: an
+ * explicit kg/lb suffix in the name wins; otherwise the whole file is treated
+ * as pounds if any unit-less weight exceeds 120, else as kilograms. Repeated
+ * marker+date rows keep the last occurrence.
  */
 export function parseLabsCSV(text: string): LabImportResult {
   const rows = parseCSV(text)
-  const out: LabImportResult = { results: [], unmatched: [], errors: [] }
+  const out: LabImportResult = {
+    results: [],
+    body: [],
+    derived: [],
+    unmatched: [],
+    notes: [],
+    errors: []
+  }
   if (rows.length < 2) {
     out.errors.push('Need a header row plus at least one data row.')
     return out
@@ -101,6 +125,19 @@ export function parseLabsCSV(text: string): LabImportResult {
     return out
   }
   const seen = new Set<string>()
+  const bodyByDate = new Map<string, BodyImportRow>()
+  const bodyRow = (date: string) => {
+    let row = bodyByDate.get(date)
+    if (!row) {
+      row = { date }
+      bodyByDate.set(date, row)
+      out.body.push(row)
+    }
+    return row
+  }
+  const weightRows: { date: string; value: number; unit?: 'kg' | 'lb' }[] = []
+  const resultByKey = new Map<string, LabResult>()
+
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i]
     const date = parseDate(r[dateIdx] ?? '')
@@ -111,6 +148,24 @@ export function parseLabsCSV(text: string): LabImportResult {
       out.errors.push(`Row ${i + 1}: could not read date or value for "${name}".`)
       continue
     }
+    const key = norm(name)
+    const wm = key.match(/^(?:body)?weight(kg|lbs?)?$/)
+    if (wm) {
+      weightRows.push({
+        date,
+        value,
+        unit: wm[1] === undefined ? undefined : wm[1] === 'kg' ? 'kg' : 'lb'
+      })
+      continue
+    }
+    if (key === 'bodyfat' || key === 'bodyfatpercent' || key === 'bodyfatpercentage' || key === 'bodyfatpct') {
+      bodyRow(date).bodyFatPct = value
+      continue
+    }
+    if (key === 'bmi') {
+      if (!out.derived.includes(name)) out.derived.push(name)
+      continue
+    }
     const markerId = matchMarker(name)
     if (!markerId) {
       if (!seen.has(name)) {
@@ -119,7 +174,31 @@ export function parseLabsCSV(text: string): LabImportResult {
       }
       continue
     }
-    out.results.push({ date, markerId, value })
+    const rkey = `${markerId}|${date}`
+    const existing = resultByKey.get(rkey)
+    if (existing) {
+      existing.value = value // last occurrence wins (corrected rows come later)
+    } else {
+      const rec: LabResult = { date, markerId, value }
+      resultByKey.set(rkey, rec)
+      out.results.push(rec)
+    }
+  }
+
+  // Resolve weight units once per file so one scale's export stays consistent.
+  if (weightRows.length > 0) {
+    const assumeLb = weightRows.some((w) => w.unit === undefined && w.value > 120)
+    let converted = false
+    for (const w of weightRows) {
+      const isLb = w.unit ? w.unit === 'lb' : assumeLb
+      if (isLb) converted = true
+      bodyRow(w.date).weightKg = Math.round((isLb ? w.value * LB_TO_KG : w.value) * 10) / 10
+    }
+    if (converted) {
+      out.notes.push(
+        'Weights were read as pounds and converted to kilograms — check the Body log if that guess is wrong.'
+      )
+    }
   }
   return out
 }

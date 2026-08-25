@@ -154,6 +154,40 @@ export async function importLabResults(
   return { added: fresh.length, skipped: results.length - fresh.length }
 }
 
+/**
+ * Merge imported body-composition rows (from a labs CSV) into the body log:
+ * fields update an existing entry on the same date, otherwise a new entry
+ * is created with source "import".
+ */
+export async function importBodyMeasurements(
+  rows: { date: string; weightKg?: number; bodyFatPct?: number }[]
+): Promise<ImportCounts> {
+  let added = 0
+  let skipped = 0
+  for (const row of rows) {
+    const patch: Partial<BodyEntry> = {}
+    if (row.weightKg !== undefined) patch.weightKg = row.weightKg
+    if (row.bodyFatPct !== undefined) patch.bodyFatPct = row.bodyFatPct
+    if (Object.keys(patch).length === 0) continue
+    const existing = await db.body.where('date').equals(row.date).first()
+    if (existing) {
+      const unchanged = Object.entries(patch).every(
+        ([k, v]) => existing[k as keyof BodyEntry] === v
+      )
+      if (unchanged) {
+        skipped++
+        continue
+      }
+      await db.body.update(existing.id!, patch)
+      added++
+    } else {
+      await db.body.add({ date: row.date, ...patch, source: 'import' })
+      added++
+    }
+  }
+  return { added, skipped }
+}
+
 /** Bulk-add food entries, skipping exact duplicates (re-imported exports). */
 export async function importFoodEntries(
   entries: FoodEntry[]

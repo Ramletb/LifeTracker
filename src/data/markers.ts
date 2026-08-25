@@ -8,6 +8,7 @@ export const SYSTEMS: { id: SystemId; name: string; blurb: string }[] = [
   { id: 'kidney', name: 'Kidney', blurb: 'Renal function & electrolytes' },
   { id: 'thyroid', name: 'Thyroid', blurb: 'Thyroid axis' },
   { id: 'blood', name: 'Blood', blurb: 'CBC & iron status' },
+  { id: 'lungs', name: 'Lungs', blurb: 'Pulmonary function' },
   { id: 'micro', name: 'Micronutrients', blurb: 'Vitamins, minerals & hormones' }
 ]
 
@@ -75,7 +76,7 @@ export const MARKERS: MarkerDef[] = [
     desc: 'Fat circulating in the blood, very responsive to diet. High fasting values signal insulin resistance and raise cardiovascular risk.',
     advice:
       'Cut refined carbs, sugar and alcohol; add omega-3-rich fish; fasted morning walks help. Triglycerides respond to lifestyle within weeks.',
-    aliases: ['triglyceride', 'tg', 'trigs']
+    aliases: ['triglyceride', 'trigs']
   },
   {
     id: 'non_hdl',
@@ -605,22 +606,637 @@ export const MARKERS: MarkerDef[] = [
     desc: 'EPA+DHA as a share of red-cell membrane fats. Above 8% associates with lower cardiovascular risk.',
     advice: '2–3 servings of oily fish weekly, or ~1–2g EPA/DHA daily; re-test in 4 months.',
     aliases: ['omega 3 index', 'omega-3', 'o3 index']
+  },
+  // ── Cardiovascular — advanced lipids & vascular function ──────────
+  {
+    id: 'apoa1',
+    name: 'Apolipoprotein A1',
+    short: 'ApoA1',
+    unit: 'mg/dL',
+    category: 'cardio',
+    std: { low: 110 },
+    opt: { low: 140 },
+    decimals: 0,
+    desc: 'The main protein of HDL particles. Higher levels track with better reverse cholesterol transport.',
+    aliases: ['apo a1', 'apo a-1', 'apolipoprotein a1', 'apolipoprotein a-1']
+  },
+  {
+    id: 'apob_apoa1',
+    name: 'ApoB/ApoA1 ratio',
+    short: 'ApoB/A1',
+    unit: 'ratio',
+    category: 'cardio',
+    std: { high: 0.9 },
+    opt: { high: 0.7 },
+    decimals: 2,
+    desc: 'Atherogenic-to-protective particle balance. One of the strongest single lipid predictors of cardiovascular events.',
+    aliases: ['apob/apoa1 ratio', 'apo b/apo a1', 'apob apoa1 ratio']
+  },
+  {
+    id: 'chol_hdl_ratio',
+    name: 'Cholesterol/HDL ratio',
+    short: 'TC/HDL',
+    unit: 'ratio',
+    category: 'cardio',
+    std: { high: 5.0 },
+    opt: { high: 3.5 },
+    decimals: 1,
+    desc: 'Total cholesterol divided by HDL. A quick composite of atherogenic burden versus protection.',
+    aliases: ['cholesterol/hdl ratio', 'chol/hdl ratio', 'tc/hdl', 'total cholesterol/hdl']
+  },
+  {
+    id: 'imt_left',
+    name: 'Carotid IMT (left)',
+    short: 'IMT L',
+    unit: 'mm',
+    category: 'cardio',
+    std: { high: 0.9 },
+    opt: { high: 0.7 },
+    decimals: 2,
+    desc: 'Intima-media thickness of the left common carotid — a direct ultrasound measure of early arterial wall change.',
+    advice: 'IMT responds slowly to the same levers as ApoB: lipid control, blood pressure, and not smoking. Re-scan every 1–2 years to see the trend.',
+    aliases: ['cca imt left', 'carotid imt left', 'imt left']
+  },
+  {
+    id: 'imt_right',
+    name: 'Carotid IMT (right)',
+    short: 'IMT R',
+    unit: 'mm',
+    category: 'cardio',
+    std: { high: 0.9 },
+    opt: { high: 0.7 },
+    decimals: 2,
+    desc: 'Intima-media thickness of the right common carotid.',
+    aliases: ['cca imt right', 'carotid imt right', 'imt right']
+  },
+  {
+    id: 'bapwv',
+    name: 'Pulse wave velocity (baPWV)',
+    short: 'baPWV',
+    unit: 'm/s',
+    category: 'cardio',
+    std: { high: 14 },
+    opt: { high: 12 },
+    decimals: 1,
+    desc: 'Brachial-ankle pulse wave velocity — how fast the pressure wave travels through your arteries. Lower means more elastic vessels.',
+    aliases: ['pulse wave velocity', 'pwv']
+  },
+  {
+    id: 'abi_right',
+    name: 'Ankle-brachial index (right)',
+    short: 'ABI R',
+    unit: 'ratio',
+    category: 'cardio',
+    std: { low: 0.9, high: 1.4 },
+    opt: { low: 1.0, high: 1.3 },
+    decimals: 2,
+    desc: 'Ankle-to-arm blood pressure ratio. Below 0.9 suggests narrowing; above 1.4 suggests stiff, poorly compressible arteries — both worth a clinician conversation.',
+    aliases: ['ankle-brachial index right', 'ankle brachial index right', 'abi right']
+  },
+  {
+    id: 'abi_left',
+    name: 'Ankle-brachial index (left)',
+    short: 'ABI L',
+    unit: 'ratio',
+    category: 'cardio',
+    std: { low: 0.9, high: 1.4 },
+    opt: { low: 1.0, high: 1.3 },
+    decimals: 2,
+    desc: 'Ankle-to-arm blood pressure ratio on the left side.',
+    aliases: ['ankle-brachial index left', 'ankle brachial index left', 'abi left']
+  },
+  {
+    id: 'ef',
+    name: 'Ejection fraction',
+    short: 'EF',
+    unit: '%',
+    category: 'cardio',
+    std: { low: 52, high: 75 },
+    opt: { low: 55, high: 70 },
+    decimals: 0,
+    desc: 'The share of blood the left ventricle pumps out per beat, from echocardiogram.',
+    aliases: ['lvef', 'ejection fraction']
+  },
+  {
+    id: 'qtc',
+    name: 'QTc interval',
+    short: 'QTc',
+    unit: 'ms',
+    category: 'cardio',
+    std: { high: 450 },
+    opt: { high: 430 },
+    decimals: 0,
+    desc: 'Heart-rate-corrected QT interval from ECG. Prolongation matters for rhythm risk and some medication choices.',
+    aliases: ['qtc interval', 'corrected qt'],
+    femStd: { high: 470 },
+    femOpt: { high: 450 }
+  },
+  {
+    id: 'resting_hr_lab',
+    name: 'Resting heart rate (exam)',
+    short: 'HR',
+    unit: 'bpm',
+    category: 'cardio',
+    std: { low: 45, high: 90 },
+    opt: { low: 48, high: 68 },
+    decimals: 0,
+    desc: 'Heart rate at the exam. Falls with aerobic fitness; day-to-day resting HR lives in the Daily log.',
+    aliases: ['heart rate', 'pulse rate']
+  },
+  {
+    id: 'sdnn',
+    name: 'HRV (SDNN)',
+    short: 'SDNN',
+    unit: 'ms',
+    category: 'cardio',
+    std: { low: 30 },
+    opt: { low: 50 },
+    decimals: 0,
+    desc: 'Heart-rate variability. Higher generally reflects better autonomic balance and recovery; very protocol-dependent, so compare against your own baseline.',
+    aliases: ['hrv sdnn', 'hrv']
+  },
+  // ── Lungs ─────────────────────────────────────────────────────────
+  {
+    id: 'fvc_pct',
+    name: 'FVC % predicted',
+    short: 'FVC %',
+    unit: '%',
+    category: 'lungs',
+    std: { low: 80 },
+    opt: { low: 95 },
+    decimals: 0,
+    desc: 'Forced vital capacity versus predicted for your age, height and sex — total exhalable lung volume.',
+    aliases: ['fvc % predicted', 'fvc percent predicted']
+  },
+  {
+    id: 'fev1_pct',
+    name: 'FEV1 % predicted',
+    short: 'FEV1 %',
+    unit: '%',
+    category: 'lungs',
+    std: { low: 80 },
+    opt: { low: 100 },
+    decimals: 0,
+    desc: 'Air moved in the first second of a hard exhale, versus predicted. The workhorse spirometry number.',
+    aliases: ['fev1 % predicted', 'fev1 percent predicted']
+  },
+  {
+    id: 'fev1_fvc',
+    name: 'FEV1/FVC ratio',
+    short: 'FEV1/FVC',
+    unit: 'ratio',
+    category: 'lungs',
+    std: { low: 0.7 },
+    opt: { low: 0.75 },
+    decimals: 2,
+    desc: 'The obstruction screen: below 0.70 suggests airflow limitation. Aerobic training and not smoking protect it.',
+    aliases: ['fev1/fvc', 'fev1 fvc ratio']
+  },
+  // ── Metabolic — additional ────────────────────────────────────────
+  {
+    id: 'c_peptide',
+    name: 'C-Peptide',
+    short: 'C-Pep',
+    unit: 'ng/mL',
+    category: 'metabolic',
+    std: { low: 0.8, high: 3.85 },
+    opt: { low: 1.1, high: 3.0 },
+    decimals: 2,
+    desc: 'Released 1:1 with insulin, but cleared more slowly — a steadier read on how hard the pancreas works.',
+    aliases: ['c peptide']
+  },
+  {
+    id: 'lp_ir',
+    name: 'Insulin resistance score (LP-IR)',
+    short: 'LP-IR',
+    unit: 'score',
+    category: 'metabolic',
+    std: { high: 63 },
+    opt: { high: 45 },
+    decimals: 0,
+    desc: 'NMR-derived 0–100 insulin resistance score from lipoprotein particle sizes. Under 45 is insulin-sensitive territory.',
+    aliases: ['insulin resistance score', 'lp-ir', 'lp ir score']
+  },
+  // ── Kidney — electrolytes & chemistry ─────────────────────────────
+  {
+    id: 'chloride',
+    name: 'Chloride',
+    short: 'Cl',
+    unit: 'mmol/L',
+    category: 'kidney',
+    std: { low: 98, high: 107 },
+    opt: { low: 100, high: 106 },
+    decimals: 0,
+    desc: 'A major electrolyte, read alongside sodium and CO₂ for acid-base balance.',
+    aliases: ['cl', 'serum chloride']
+  },
+  {
+    id: 'co2',
+    name: 'CO₂ (bicarbonate)',
+    short: 'CO₂',
+    unit: 'mmol/L',
+    category: 'kidney',
+    std: { low: 20, high: 29 },
+    opt: { low: 23, high: 28 },
+    decimals: 0,
+    desc: 'Serum bicarbonate — the blood’s main acid buffer. Low values can reflect high-protein/low-carb eating, intense training, or acid-base issues worth re-checking.',
+    aliases: ['carbon dioxide', 'bicarbonate', 'hco3', 'co2 total']
+  },
+  {
+    id: 'calcium',
+    name: 'Calcium',
+    short: 'Ca',
+    unit: 'mg/dL',
+    category: 'kidney',
+    std: { low: 8.6, high: 10.2 },
+    opt: { low: 9.0, high: 10.0 },
+    decimals: 1,
+    desc: 'Tightly regulated by parathyroid hormone and vitamin D; persistent highs or lows need follow-up, not supplements.',
+    aliases: ['ca', 'serum calcium']
+  },
+  // ── Liver — additional ────────────────────────────────────────────
+  {
+    id: 'total_protein',
+    name: 'Total protein',
+    short: 'T.Prot',
+    unit: 'g/dL',
+    category: 'liver',
+    std: { low: 6.0, high: 8.5 },
+    opt: { low: 6.5, high: 8.0 },
+    decimals: 1,
+    desc: 'Albumin plus globulins — overall protein synthesis and immune protein load.',
+    aliases: ['protein total', 'protein, total']
+  },
+  {
+    id: 'globulin',
+    name: 'Globulin',
+    short: 'Glob',
+    unit: 'g/dL',
+    category: 'liver',
+    std: { low: 1.5, high: 4.5 },
+    opt: { low: 2.0, high: 3.5 },
+    decimals: 1,
+    desc: 'The non-albumin blood proteins, mostly immune-related.',
+    aliases: ['serum globulin']
+  },
+  {
+    id: 'ag_ratio',
+    name: 'Albumin/globulin ratio',
+    short: 'A/G',
+    unit: 'ratio',
+    category: 'liver',
+    std: { low: 1.2, high: 2.2 },
+    opt: { low: 1.5, high: 2.2 },
+    decimals: 1,
+    desc: 'Albumin relative to globulin; a low ratio prompts a look at both sides.',
+    aliases: ['albumin/globulin ratio', 'a/g ratio', 'ag ratio']
+  },
+  {
+    id: 'fib4',
+    name: 'FIB-4 index',
+    short: 'FIB-4',
+    unit: 'score',
+    category: 'liver',
+    std: { high: 1.3 },
+    opt: { high: 1.0 },
+    decimals: 2,
+    desc: 'A fibrosis screen computed from age, AST, ALT and platelets. Below 1.3 makes advanced scarring unlikely.',
+    aliases: ['fib-4', 'fib 4', 'fib4 score']
+  },
+  {
+    id: 'liver_stiffness',
+    name: 'Liver stiffness (FibroScan)',
+    short: 'Stiffness',
+    unit: 'kPa',
+    category: 'liver',
+    std: { high: 7.0 },
+    opt: { high: 5.5 },
+    decimals: 1,
+    desc: 'Elastography measure of liver scarring. Under 7 kPa argues against significant fibrosis.',
+    aliases: ['liver stiffness', 'liver stiffness e', 'fibroscan e', 'liver stiffness (e)']
+  },
+  {
+    id: 'cap_score',
+    name: 'Liver fat (CAP)',
+    short: 'CAP',
+    unit: 'dB/m',
+    category: 'liver',
+    std: { high: 268 },
+    opt: { high: 238 },
+    decimals: 0,
+    desc: 'Controlled attenuation parameter — an ultrasound estimate of liver fat. Rising values track early fatty liver, which reverses with weight loss and less alcohol/sugar.',
+    advice: 'Liver fat is among the most reversible findings there is: a 5–10% body-weight drop, minimal alcohol, and fewer liquid sugars typically normalize it within months.',
+    aliases: ['cap', 'controlled attenuation parameter', 'cap score']
+  },
+  // ── Thyroid — additional ──────────────────────────────────────────
+  {
+    id: 'rt3',
+    name: 'Reverse T3',
+    short: 'rT3',
+    unit: 'ng/dL',
+    category: 'thyroid',
+    std: { low: 9, high: 24 },
+    opt: { low: 9, high: 18 },
+    decimals: 1,
+    desc: 'An inactive thyroid metabolite that rises with illness, severe dieting and stress.',
+    aliases: ['reverse t3', 'rt3']
+  },
+  {
+    id: 'tpo_ab',
+    name: 'TPO antibodies',
+    short: 'TPO Ab',
+    unit: 'IU/mL',
+    category: 'thyroid',
+    std: { high: 34 },
+    opt: { high: 9 },
+    decimals: 0,
+    desc: 'Antibodies against thyroid peroxidase — the main marker of autoimmune (Hashimoto) thyroid disease.',
+    aliases: ['thyroid peroxidase antibodies', 'anti-tpo', 'tpo']
+  },
+  {
+    id: 'tg_ab',
+    name: 'Thyroglobulin antibodies',
+    short: 'Tg Ab',
+    unit: 'IU/mL',
+    category: 'thyroid',
+    std: { high: 4 },
+    opt: { high: 4 },
+    decimals: 1,
+    desc: 'A second thyroid autoantibody, read together with TPO antibodies. Negative cutoffs vary by assay (1–4 IU/mL); "<X" results are negative.',
+    aliases: ['anti-thyroglobulin', 'tg antibodies']
+  },
+  // ── Blood — iron panel & extended CBC ─────────────────────────────
+  {
+    id: 'iron',
+    name: 'Iron (serum)',
+    short: 'Iron',
+    unit: 'µg/dL',
+    category: 'blood',
+    std: { low: 50, high: 180 },
+    opt: { low: 70, high: 150 },
+    decimals: 0,
+    desc: 'Circulating iron — swings with recent meals, so read alongside ferritin and saturation.',
+    aliases: ['serum iron'],
+    femStd: { low: 35, high: 145 },
+    femOpt: { low: 60, high: 130 }
+  },
+  {
+    id: 'tibc',
+    name: 'TIBC',
+    short: 'TIBC',
+    unit: 'µg/dL',
+    category: 'blood',
+    std: { low: 250, high: 450 },
+    opt: { low: 250, high: 400 },
+    decimals: 0,
+    desc: 'Total iron-binding capacity — rises when the body wants more iron.',
+    aliases: ['total iron binding capacity', 'iron binding capacity']
+  },
+  {
+    id: 'iron_sat',
+    name: 'Iron saturation',
+    short: 'TSAT',
+    unit: '%',
+    category: 'blood',
+    std: { low: 15, high: 55 },
+    opt: { low: 25, high: 45 },
+    decimals: 0,
+    desc: 'How full the iron-transport protein is. Persistently above ~45–50% is a hemochromatosis screen prompt.',
+    aliases: ['transferrin saturation', 'tsat', '% saturation']
+  },
+  {
+    id: 'mch',
+    name: 'MCH',
+    short: 'MCH',
+    unit: 'pg',
+    category: 'blood',
+    std: { low: 27, high: 33 },
+    opt: { low: 28, high: 32 },
+    decimals: 1,
+    desc: 'Average hemoglobin per red cell.',
+    aliases: ['mean corpuscular hemoglobin']
+  },
+  {
+    id: 'mchc',
+    name: 'MCHC',
+    short: 'MCHC',
+    unit: 'g/dL',
+    category: 'blood',
+    std: { low: 32, high: 36 },
+    opt: { low: 33, high: 35.5 },
+    decimals: 1,
+    desc: 'Hemoglobin concentration within red cells.',
+    aliases: ['mean corpuscular hemoglobin concentration']
+  },
+  {
+    id: 'rdw',
+    name: 'RDW',
+    short: 'RDW',
+    unit: '%',
+    category: 'blood',
+    std: { low: 11.5, high: 14.5 },
+    opt: { low: 11.5, high: 13.5 },
+    decimals: 1,
+    desc: 'Variation in red-cell size. Creeping upward is an early, unspecific flag for nutrient deficiency or inflammation.',
+    aliases: ['red cell distribution width']
+  },
+  {
+    id: 'mpv',
+    name: 'MPV',
+    short: 'MPV',
+    unit: 'fL',
+    category: 'blood',
+    std: { low: 7.5, high: 12 },
+    opt: { low: 8, high: 11.5 },
+    decimals: 1,
+    desc: 'Mean platelet volume — average platelet size.',
+    aliases: ['mean platelet volume']
+  },
+  {
+    id: 'neut_abs',
+    name: 'Neutrophils (absolute)',
+    short: 'Neut',
+    unit: 'cells/µL',
+    category: 'blood',
+    std: { low: 1500, high: 7800 },
+    opt: { low: 1800, high: 6500 },
+    decimals: 0,
+    desc: 'The front-line bacterial defenders. Value in cells/µL.',
+    aliases: ['neutrophils absolute', 'absolute neutrophils', 'anc']
+  },
+  {
+    id: 'lymph_abs',
+    name: 'Lymphocytes (absolute)',
+    short: 'Lymph',
+    unit: 'cells/µL',
+    category: 'blood',
+    std: { low: 850, high: 3900 },
+    opt: { low: 1000, high: 3500 },
+    decimals: 0,
+    desc: 'T-cells, B-cells and NK cells. Value in cells/µL.',
+    aliases: ['lymphocytes absolute', 'absolute lymphocytes']
+  },
+  {
+    id: 'mono_abs',
+    name: 'Monocytes (absolute)',
+    short: 'Mono',
+    unit: 'cells/µL',
+    category: 'blood',
+    std: { low: 200, high: 950 },
+    opt: { low: 200, high: 800 },
+    decimals: 0,
+    desc: 'Tissue-macrophage precursors; high-normal counts loosely track chronic inflammation. Value in cells/µL.',
+    aliases: ['monocytes absolute', 'absolute monocytes']
+  },
+  {
+    id: 'eos_abs',
+    name: 'Eosinophils (absolute)',
+    short: 'Eos',
+    unit: 'cells/µL',
+    category: 'blood',
+    std: { low: 15, high: 500 },
+    opt: { low: 15, high: 400 },
+    decimals: 0,
+    desc: 'Allergy- and parasite-responsive white cells. Value in cells/µL.',
+    aliases: ['eosinophils absolute', 'absolute eosinophils']
+  },
+  {
+    id: 'baso_abs',
+    name: 'Basophils (absolute)',
+    short: 'Baso',
+    unit: 'cells/µL',
+    category: 'blood',
+    std: { high: 200 },
+    opt: { high: 150 },
+    decimals: 0,
+    desc: 'The rarest white cells. Value in cells/µL.',
+    aliases: ['basophils absolute', 'absolute basophils']
+  },
+  // ── Hormones (micro) — additional ─────────────────────────────────
+  {
+    id: 'test_free',
+    name: 'Testosterone (free)',
+    short: 'Free T',
+    unit: 'pg/mL',
+    category: 'micro',
+    std: { low: 35, high: 155 },
+    opt: { low: 65, high: 130 },
+    decimals: 1,
+    desc: 'The unbound, biologically active fraction. More informative than total when SHBG is unusual.',
+    aliases: ['free testosterone', 'testosterone free'],
+    femStd: { low: 0.1, high: 6.4 },
+    femOpt: { low: 1.0, high: 5.0 }
+  },
+  {
+    id: 'test_bio',
+    name: 'Testosterone (bioavailable)',
+    short: 'Bio T',
+    unit: 'ng/dL',
+    category: 'micro',
+    std: { low: 110, high: 575 },
+    opt: { low: 150, high: 450 },
+    decimals: 1,
+    desc: 'Free plus loosely albumin-bound testosterone — the fraction tissues can actually use.',
+    aliases: ['bioavailable testosterone', 'testosterone bioavailable'],
+    femStd: { low: 0.5, high: 8.5 },
+    femOpt: { low: 1, high: 7 }
+  },
+  {
+    id: 'shbg',
+    name: 'SHBG',
+    short: 'SHBG',
+    unit: 'nmol/L',
+    category: 'micro',
+    std: { low: 10, high: 50 },
+    opt: { low: 20, high: 45 },
+    decimals: 0,
+    desc: 'The protein that binds sex hormones. Low SHBG commonly travels with insulin resistance and liver fat; high with thyroid excess or low energy intake.',
+    aliases: ['sex hormone binding globulin'],
+    femStd: { low: 17, high: 124 }
+  },
+  {
+    id: 'estradiol',
+    name: 'Estradiol',
+    short: 'E2',
+    unit: 'pg/mL',
+    category: 'micro',
+    std: { low: 8, high: 40 },
+    opt: { low: 15, high: 35 },
+    decimals: 0,
+    desc: 'Male reference shown; in women it varies across the cycle, so track against your own timing. Both very low and high values matter for bone and mood.',
+    aliases: ['e2', 'oestradiol'],
+    femStd: { low: 15, high: 350 },
+    femOpt: { low: 15, high: 350 }
+  },
+  {
+    id: 'dhea_s',
+    name: 'DHEA sulfate',
+    short: 'DHEA-S',
+    unit: 'µg/dL',
+    category: 'micro',
+    std: { low: 89, high: 457 },
+    opt: { low: 150, high: 400 },
+    decimals: 0,
+    desc: 'The adrenal androgen reservoir; declines steadily with age, so interpret against age-matched ranges.',
+    aliases: ['dhea-s', 'dheas', 'dhea sulfate'],
+    femStd: { low: 57, high: 279 },
+    femOpt: { low: 100, high: 279 }
+  },
+  {
+    id: 'cortisol_am',
+    name: 'Cortisol (AM)',
+    short: 'Cortisol',
+    unit: 'µg/dL',
+    category: 'micro',
+    std: { low: 6, high: 18.4 },
+    opt: { low: 8, high: 16 },
+    decimals: 1,
+    desc: 'Morning cortisol, the daily peak. Timing matters — a mid-day draw reads low without meaning anything.',
+    aliases: ['am cortisol', 'morning cortisol', 'cortisol am']
+  },
+  {
+    id: 'psa',
+    name: 'PSA (total)',
+    short: 'PSA',
+    unit: 'ng/mL',
+    category: 'micro',
+    std: { high: 4.0 },
+    opt: { high: 1.0 },
+    decimals: 2,
+    desc: 'Prostate-specific antigen. Interpretation depends on age and trend — a rising value matters more than a single number.',
+    aliases: ['psa total', 'prostate specific antigen']
   }
 ]
 
 export const markerById = new Map(MARKERS.map((m) => [m.id, m]))
 
-const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9%]+/g, ' ').trim()
+export const normalizeMarkerName = (s: string) =>
+  s.normalize('NFKD').toLowerCase().replace(/[^a-z0-9%]+/g, ' ').trim()
+
+/**
+ * Keys too generic to match safely — a CSV row named "Test", "Tg", "CAP",
+ * "HR", "NA" or "CO" plausibly means something else, so these never index
+ * (the markers stay reachable through their unambiguous names/aliases).
+ */
+const BLOCKED_KEYS = new Set(['test', 'tg', 'stiffness', 'hr', 'na', 'co'])
+/** Deliberate chemical symbols exempt from the minimum-length guard. */
+const SYMBOL_KEYS = new Set(['k', 'ca', 'cl', 'mg'])
 
 const aliasIndex = new Map<string, string>()
+const addKey = (raw: string, id: string) => {
+  const key = normalizeMarkerName(raw)
+  if (!key || BLOCKED_KEYS.has(key)) return
+  if ((key.length < 2 || /^\d+%?$/.test(key)) && !SYMBOL_KEYS.has(key)) return
+  aliasIndex.set(key, id)
+}
 for (const m of MARKERS) {
-  aliasIndex.set(normalize(m.name), m.id)
-  aliasIndex.set(normalize(m.short), m.id)
-  aliasIndex.set(normalize(m.id), m.id)
-  for (const a of m.aliases ?? []) aliasIndex.set(normalize(a), m.id)
+  addKey(m.name, m.id)
+  addKey(m.short, m.id)
+  addKey(m.id, m.id)
+  for (const a of m.aliases ?? []) addKey(a, m.id)
 }
 
 /** Match a free-text lab name (e.g. from a CSV) to a marker id, or undefined. */
 export function matchMarker(name: string): string | undefined {
-  return aliasIndex.get(normalize(name))
+  return aliasIndex.get(normalizeMarkerName(name))
 }

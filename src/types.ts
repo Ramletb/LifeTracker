@@ -99,6 +99,7 @@ export type SystemId =
   | 'kidney'
   | 'thyroid'
   | 'blood'
+  | 'lungs'
   | 'micro'
 
 export interface Range {
