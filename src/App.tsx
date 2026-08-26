@@ -54,7 +54,7 @@ export default function App() {
           </div>
         </header>
       </div>
-      <div className="app">
+      <div className="app" data-chapter={tab}>
       <main>
         {tab === 'today' && (
           <Today
@@ -108,8 +108,8 @@ export default function App() {
 }
 
 /**
- * The one chromatic surface in the interface: a gradient strip carrying the
- * race countdown, or the voice hint before a goal exists.
+ * Announcement strip: the race countdown, or the voice hint before a goal
+ * exists. Sits above the nav bar, full width.
  */
 function SignalBar({ onGoGoals }: { onGoGoals: () => void }) {
   const goals = useLiveQuery(() => db.goals.toArray(), []) ?? []
@@ -129,7 +129,8 @@ function SignalBar({ onGoGoals }: { onGoGoals: () => void }) {
   )
   return (
     <button type="button" className="signal-bar" onClick={onGoGoals}>
-      {goal.title} · {fmtMed(goal.date)} · {days === 0 ? 'race day' : `${days} days out`} →
+      {goal.title} · {fmtMed(goal.date)} ·{' '}
+      <strong>{days === 0 ? 'race day' : `${days} days out`} →</strong>
     </button>
   )
 }

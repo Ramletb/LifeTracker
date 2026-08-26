@@ -261,6 +261,7 @@ export function TabBar({
   tab: TabId
   onChange: (t: TabId) => void
 }) {
+  // The active tab wears its chapter hue (assigned per id in CSS).
   const tabs: { id: TabId; label: string }[] = [
     { id: 'today', label: 'Today' },
     { id: 'labs', label: 'Labs' },
@@ -276,6 +277,7 @@ export function TabBar({
           type="button"
           className={`tab${tab === t.id ? ' is-active' : ''}`}
           aria-current={tab === t.id ? 'page' : undefined}
+          data-tab={t.id}
           onClick={() => onChange(t.id)}
         >
           {ICONS[t.id]}

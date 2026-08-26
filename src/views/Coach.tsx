@@ -46,8 +46,8 @@ export function Coach({ profile }: { profile: Profile }) {
       ))}
 
       {untested.length > 0 && (
-        <Card eyebrow="Blind spots" title="Worth testing next">
-          <p className="note" style={{ marginTop: 0 }}>
+        <Card className="card-feature" eyebrow="Blind spots" title="Worth testing next">
+          <p className="note feature-inner" style={{ marginTop: 0 }}>
             High-signal markers you haven’t logged yet: {untested.join(', ')}.
             Most can ride along on a routine panel — ask for them at your next
             draw.
