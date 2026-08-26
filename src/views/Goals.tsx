@@ -29,6 +29,7 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
       </div>
 
       <Card
+        className="card-feature"
         eyebrow="Training plan"
         title={
           plan.raceDone
@@ -41,6 +42,7 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
           </button>
         }
       >
+        <div className="feature-inner">
         <RunnerTrack plan={plan} goal={goal} />
         <div className="track-legend">
           <span className="legend-item">
@@ -51,6 +53,7 @@ export function Goals({ onOpenVoice }: { onOpenVoice: () => void }) {
             <span className="legend-swatch legend-swatch-ghost" />
             planned long run
           </span>
+        </div>
         </div>
         {!plan.achievable && (
           <p className="msg-err" style={{ marginBottom: 0 }}>

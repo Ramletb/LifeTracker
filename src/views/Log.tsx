@@ -96,6 +96,7 @@ function FoodLog({ date, profile }: { date: string; profile: Profile }) {
   return (
     <>
       <Card
+        className="card-feature"
         eyebrow="Day total"
         title={`${kcal.toLocaleString()} kcal`}
         action={
@@ -104,6 +105,7 @@ function FoodLog({ date, profile }: { date: string; profile: Profile }) {
           </span>
         }
       >
+        <div className="feature-inner">
         <MacroBar
           segments={[
             { label: 'Protein', kcal: protein * 4, grams: protein, colorVar: '--series-1' },
@@ -111,7 +113,8 @@ function FoodLog({ date, profile }: { date: string; profile: Profile }) {
             { label: 'Fat', kcal: fat * 9, grams: fat, colorVar: '--series-3' }
           ]}
         />
-        <p className="note" style={{ marginBottom: 0 }}>
+        </div>
+        <p className="note" style={{ marginBottom: 0, marginTop: 16 }}>
           Fiber {Math.round(fiber)}g of {profile.fiberTarget}g
           {satFat > 0 ? ` · Sat fat ${Math.round(satFat)}g` : ''}
         </p>

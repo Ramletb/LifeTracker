@@ -70,6 +70,7 @@ export function Today({
       <div className="view-date">{fmtWeekday(today)}</div>
 
       <Card
+        className="card-feature"
         eyebrow="Body systems"
         title="Systems check"
         action={
@@ -78,6 +79,7 @@ export function Today({
           </span>
         }
       >
+        <div className="feature-inner">
         <div className="systems-grid">
           {SYSTEMS.map((s) => {
             const sc = scores.get(s.id)
@@ -91,6 +93,7 @@ export function Today({
               />
             )
           })}
+        </div>
         </div>
         {latest.size === 0 && (
           <p className="empty">
